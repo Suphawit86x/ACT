@@ -19,7 +19,7 @@
       padding: 20px;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
     }
     .book-container {
       max-width: 900px;
@@ -28,6 +28,7 @@
       border-radius: 15px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       overflow: hidden;
+      margin: 20px auto;
     }
     .header {
       background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
@@ -69,6 +70,35 @@
     }
     .menu-btn:hover { background: #8B0000; color: white; }
     .menu-btn.active { background: #8B0000; color: white; }
+
+    /* ===== search bar ===== */
+    .law-search {
+      background: #f8f8f8;
+      padding: 0 30px 20px;
+      display: flex;
+      justify-content: center;
+      border-bottom: 2px solid #ddd;
+    }
+    .law-search .search-inner { display: flex; width: 100%; max-width: 620px; }
+    .law-search input {
+      flex-grow: 1; min-width: 0; padding: 12px 18px;
+      border: 2px solid #ddd; border-right: none; border-radius: 8px 0 0 8px;
+      font-size: 15px; font-family: 'Sarabun', sans-serif; outline: none; transition: border-color .2s;
+    }
+    .law-search input:focus { border-color: #8B0000; }
+    .btn-search {
+      padding: 12px 25px; background: #8B0000; color: #fff; border: 2px solid #8B0000;
+      border-radius: 0 8px 8px 0; font-size: 15px; font-weight: 600; cursor: pointer;
+      font-family: 'Sarabun', sans-serif; transition: .2s; white-space: nowrap; flex-shrink: 0;
+    }
+    .btn-search:hover { background: #6B0000; border-color: #6B0000; }
+    .result-count { font-size: 14px; color: #888; font-weight: 600; margin-bottom: 18px; }
+    .law-tag {
+      display: inline-block; font-size: 12px; font-weight: 700; color: #8B0000;
+      background: #fff5f5; border: 1px solid #FFD700; padding: 3px 10px; border-radius: 5px; margin-bottom: 12px;
+    }
+    .status-message { text-align: center; color: #888; padding: 40px 20px; font-size: 15px; }
+
     .content { padding: 40px; min-height: 500px; }
     .law-section { display: none; }
     .law-section.active { display: block; animation: fadeIn 0.4s; }
@@ -100,14 +130,16 @@
       right: 10px;
       padding: 6px 12px;
       font-size: 12px;
-      background: rgba(139,0,0,0.30);
+      background: #8B0000;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
       transition: 0.2s;
+      font-family: 'Sarabun', sans-serif;
+      font-weight: 600;
     }
-    .copy-btn:hover { background: rgba(139,0,0,0.6); }
+    .copy-btn:hover { background: #6B0000; }
     .footer {
       background: #f0f0f0;
       padding: 20px;
@@ -116,6 +148,14 @@
       color: #666;
       border-top: 2px solid #ddd;
     }
+
+    /* ===== accessibility ===== */
+    :focus-visible { outline: 3px solid #8B0000; outline-offset: 2px; border-radius: 4px; }
+    .menu-btn:focus-visible, .btn-search:focus-visible, .copy-btn:focus-visible { outline-color: #FFD700; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+    }
+
     @media (max-width: 600px) {
       body { padding: 10px; }
       .header { padding: 25px 15px; }
@@ -124,6 +164,9 @@
       .header p { font-size: 12px; }
       .menu { padding: 10px; gap: 8px; }
       .menu-btn { width: 100%; padding: 10px; font-size: 14px; }
+      .law-search { padding: 0 12px 14px; }
+      .btn-search { padding: 10px 15px; font-size: 14px; }
+      .law-search input { padding: 10px 15px; font-size: 14px; }
       .content { padding: 20px; }
       .section-title { font-size: 20px; }
       .article { padding: 15px; }
@@ -149,7 +192,17 @@
       <button class="menu-btn" onclick="showSection('section3', this)">รัฐธรรมนูญแห่งราชอาณาจักรไทย</button>
     </div>
 
+    <div class="law-search">
+      <div class="search-inner">
+        <input type="text" id="law-q" placeholder="ค้นหามาตรา หรือคำ ในกฎหมายทุกฉบับ..." aria-label="ค้นหากฎหมาย" onkeyup="lawSearch()">
+        <button class="btn-search" onclick="lawSearch()">ค้นหา</button>
+      </div>
+    </div>
+
      <div class="content">
+
+      <div id="law-count" class="result-count"></div>
+      <div id="law-results" style="display:none;"></div>
 
       <div class="law-section active" id="section1">
         <h2 class="section-title">ประมวลกฎหมายอาญา พุทธศักราช ๒๕๖๙</h2>
@@ -691,7 +744,7 @@
           <div class="article-content">
             (๑) ข้าราชการชั้นประทวน (พลทหาร/พลตำรวจ ถึง จ่าสิบเอก/ดาบตำรวจ) ถือตราได้ไม่เกิน ๓ ตรา<br>
             (๒) ข้าราชการชั้นสัญญาบัตร (ร้อยตรี/ร้อยตำรวจตรีขึ้นไป) ถือตราได้ไม่เกิน ๔ ตรา<br>
-            (๓) ห้ามถือตราซ้ำหมวดเดียวกัน อทิเช่น ทหารราบอยู่ได้เพียง ๑ ตรา<br>
+            (๓) ห้ามถือตราซ้ำหมวดเดียวกัน อาทิเช่น ทหารราบอยู่ได้เพียง ๑ ตรา<br>
             (๔) ราชวงศ์ คณะรัฐมนตรี และจอมพล ถือตราได้ไม่เกิน ๕ ตรา<br>
             หากพบเห็นมีการละเมิดข้อใดข้อหนึ่ง มีโทษ (ความผิดสถานเบา-ความผิดสถานกลาง)
           </div>
@@ -911,7 +964,7 @@
           <div class="article-content">
             วินัยเป็นหลักสำคัญที่สุดสำหรับข้าราชการทหารและตำรวจ เพราะฉะนั้นข้าราชการทุกคนจักต้องรักษาโดยเคร่งครัดอยู่เสมอ ผู้ใดฝ่าฝืนให้ถือว่าผู้นั้นกระทำผิด ตัวอย่างการกระทำผิดวินัย มีดังต่อไปนี้<br>
             ๑. ดื้อดึง ขัดขืน หลีกเลี่ยง หรือละเลยไม่ปฏิบัติตามคำสั่งของผู้บังคับบัญชาเหนือตน<br>
-            ๒. ไม่รักษาระเบียบการเคารพรตามลำดับชั้นบังคับบัญชา<br>
+            ๒. ไม่รักษาระเบียบการเคารพตามลำดับชั้นบังคับบัญชา<br>
             ๓. ไม่รักษามารยาทให้ถูกต้องตามแบบธรรมเนียมของทหารและตำรวจ<br>
             ๔. ก่อความแตกแยกหรือขาดความสามัคคีภายในทหาร /ตำรวจ<br>
             ๕. เกียจคร้าน ละทิ้ง หรือประมาทเลินเล่อต่อหน้าที่ราชการ<br>
@@ -965,7 +1018,7 @@
             ๖. ข้าราชการทหาร/ตำรวจทั้งชายและหญิง ห้ามย้อมสีผมเป็นอันขาด ต้องเป็นสีดำโดยธรรมชาติเท่านั้น (หากฝ่าฝืนมีโทษจำคุกไม่ต่ำกว่า ๓๐๐ วินาที หรือ ๕ นาที)<br>
             ๗. พระราชวงศ์ และรัฐบาล สามารถย้อมสีผมและสวมใส่ทรงผมใดก็ได้<br>
             ๘. ข้าราชการทหาร/ตำรวจทุกนาย รวมถึงพระราชวงศ์และรัฐบาล ห้ามแต่งเครื่องประดับที่ผิดธรรมชาติของมนุษย์ปกติ เช่น หูแมว หางแมว ปีก เป็นต้น (กระโดดตบไม่ต่ำกว่า ๒๐ ครั้ง)<br>
-            ๙. การใส่อุปกรณ์เสริมที่ไม่ได้ระบุไว้ในข้อบังคับนี้ เช่น แว่นตาเเฟชั่น หูเเมว ออร่า หรืออุปกรณ์อื่นๆ ต้องได้รับอนุญาตจากผู้บังคับบัญชาก่อน หากฝ่าฝืนมีโทษจำคุกไม่ต่ำกว่า ๓๐๐ วินาที หรือ ๕ นาที<br>
+            ๙. การใส่อุปกรณ์เสริมที่ไม่ได้ระบุไว้ในข้อบังคับนี้ เช่น แว่นตาแฟชั่น หูแมว ออร่า หรืออุปกรณ์อื่นๆ ต้องได้รับอนุญาตจากผู้บังคับบัญชาก่อน หากฝ่าฝืนมีโทษจำคุกไม่ต่ำกว่า ๓๐๐ วินาที หรือ ๕ นาที<br>
             ๑๐. การใช้ใบหน้า ไม่อนุญาตให้ใช้ใบหน้าที่มนุษย์ปกติใช้กัน เช่น ใบหน้าตลก หน้าผี ตาเหลือก หน้าตกใจ หรือใบหน้าที่ไม่เหมาะสม
           </div>
         </div>
@@ -1044,8 +1097,7 @@
         </div>
         <div class="article">
           <button class="copy-btn" onclick="copyArticle(this)">คัดลอก</button>
-          <div class="article-number">มาตรา ๔
-             สิทธิและเสรีภาพด้านร่างกาย</div>
+          <div class="article-number">มาตรา ๔ สิทธิและเสรีภาพด้านร่างกาย</div>
           <div class="article-content">บุคคลย่อมมีสิทธิและเสรีภาพในชีวิตและร่างกาย การจับและการคุมขังบุคคลจะกระทำมิได้ เว้นแต่มีคำสั่งหรือหมายของศาลหรือมีเหตุอย่างอื่นตามที่กฎหมายบัญญัติ</div>
         </div>
         <div class="article">
@@ -1097,23 +1149,84 @@
   </div>
 
   <script>
+    var currentLawSection = 'section1';
+    var LAW_NAMES = {
+      section1: 'ประมวลกฎหมายอาญา',
+      section5: 'พ.ร.บ.กฎระเบียบ',
+      section2: 'พ.ร.บ.ว่าด้วยวินัย',
+      section4: 'ประมวลกฎหมายไซเบอร์',
+      section3: 'รัฐธรรมนูญ'
+    };
+
     function showSection(sectionId, btn) {
-      document.querySelectorAll('.law-section').forEach(s => s.classList.remove('active'));
+      currentLawSection = sectionId;
+      // ล้างการค้นหาเมื่อสลับแท็บ
+      var q = document.getElementById('law-q');
+      if (q) q.value = '';
+      var results = document.getElementById('law-results');
+      if (results) { results.style.display = 'none'; results.innerHTML = ''; }
+      var countEl = document.getElementById('law-count');
+      if (countEl) countEl.textContent = '';
+
+      document.querySelectorAll('.law-section').forEach(function(s){ s.classList.remove('active'); });
       document.getElementById(sectionId).classList.add('active');
-      document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.menu-btn').forEach(function(b){ b.classList.remove('active'); });
       btn.classList.add('active');
     }
 
+    // ค้นหาข้ามกฎหมายทุกฉบับ
+    function lawSearch() {
+      var raw = document.getElementById('law-q').value.trim();
+      var k = raw.toLowerCase();
+      var results = document.getElementById('law-results');
+      var countEl = document.getElementById('law-count');
+      var sections = document.querySelectorAll('.law-section');
+
+      if (!k) {
+        results.style.display = 'none';
+        results.innerHTML = '';
+        countEl.textContent = '';
+        sections.forEach(function(s){ s.classList.remove('active'); });
+        document.getElementById(currentLawSection).classList.add('active');
+        return;
+      }
+
+      sections.forEach(function(s){ s.classList.remove('active'); });
+      var html = '';
+      var count = 0;
+      sections.forEach(function(sec){
+        var lawName = LAW_NAMES[sec.id] || '';
+        sec.querySelectorAll('.article').forEach(function(art){
+          var numEl = art.querySelector('.article-number');
+          var contEl = art.querySelector('.article-content');
+          if (!numEl || !contEl) return;
+          var hay = (numEl.innerText + ' ' + contEl.innerText).toLowerCase();
+          if (hay.indexOf(k) !== -1) {
+            count++;
+            html += '<div class="article">' +
+              '<button class="copy-btn" onclick="copyArticle(this)">คัดลอก</button>' +
+              '<div class="law-tag">' + lawName + '</div>' +
+              '<div class="article-number">' + numEl.innerHTML + '</div>' +
+              '<div class="article-content">' + contEl.innerHTML + '</div>' +
+            '</div>';
+          }
+        });
+      });
+      countEl.textContent = 'พบ ' + count + ' มาตรา จากคำค้น "' + raw + '"';
+      results.innerHTML = count ? html : '<div class="status-message">ไม่พบมาตราที่ตรงกับการค้นหา</div>';
+      results.style.display = 'block';
+    }
+
     function copyArticle(btn) {
-      const article = btn.parentElement;
-      const number = article.querySelector('.article-number').innerText;
-      const content = article.querySelector('.article-content').innerText;
-      navigator.clipboard.writeText(`${number} : ${content}`).then(() => {
+      var article = btn.parentElement;
+      var number = article.querySelector('.article-number').innerText;
+      var content = article.querySelector('.article-content').innerText;
+      navigator.clipboard.writeText(number + ' : ' + content).then(function() {
         btn.innerText = 'คัดลอกแล้ว!';
         btn.style.background = '#228B22';
-        setTimeout(() => {
+        setTimeout(function() {
           btn.innerText = 'คัดลอก';
-          btn.style.background = 'rgba(139,0,0,0.30)';
+          btn.style.background = '#8B0000';
         }, 1500);
       });
     }
